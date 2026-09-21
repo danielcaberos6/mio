@@ -216,42 +216,6 @@
     return tex;
   }
 
-  // ---------- glowing ring (eclipse style) ----------
-  const ringTex = canvasTexture((ctx,w,h)=>{
-    const cx=w/2, cy=h/2, rOuter=w/2, rInner=w*0.19;
-    for(let r=rOuter; r>rInner; r-=1){
-      const t = (r-rInner)/(rOuter-rInner);
-      const band = Math.sin(t*40)*0.5+0.5;
-      const alpha = (0.55 + band*0.45) * Math.min(1, (rOuter-r)/18) * Math.min(1,(r-rInner)/10);
-      ctx.beginPath();
-      ctx.arc(cx,cy,r,0,Math.PI*2);
-      ctx.strokeStyle = `rgba(255,${190+band*40},${60+band*60},${alpha})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  }, 512, 512);
-
-  const ringGeo = new THREE.RingGeometry(3.1, 9.2, 128);
-  // give it proper UVs for the radial texture (RingGeometry UVs are not radial by default)
-  {
-    const uv = ringGeo.attributes.uv;
-    const pos = ringGeo.attributes.position;
-    for(let i=0;i<pos.count;i++){
-      const x = pos.getX(i), y = pos.getY(i);
-      const d = Math.sqrt(x*x+y*y);
-      const rNorm = (d - 3.1)/(9.2-3.1);
-      const ang = Math.atan2(y,x);
-      uv.setXY(i, 0.5 + Math.cos(ang)*(0.19+rNorm*0.31), 0.5 + Math.sin(ang)*(0.19+rNorm*0.31));
-    }
-  }
-  const ringMat = new THREE.MeshBasicMaterial({
-    map: ringTex, transparent:true, side:THREE.DoubleSide,
-    blending:THREE.AdditiveBlending, depthWrite:false
-  });
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = Math.PI/2.4;
-  world.add(ring);
-
   // soft extra glow halo behind
   const glowTex = canvasTexture((ctx,w,h)=>{
     const g = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);
@@ -462,7 +426,6 @@
     camera.position.y = 3 + Math.sin(rotX)*18;
     camera.lookAt(0,0,0);
 
-    ring.rotation.z += 0.0012;
     ringParticles.rotation.y += 0.0006;
     sphere.rotation.y += 0.001;
     starsFar.rotation.y += 0.00006;
